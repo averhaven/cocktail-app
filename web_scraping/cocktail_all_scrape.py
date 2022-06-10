@@ -1,16 +1,17 @@
 import re
 import json
 from bs4 import BeautifulSoup
-from dataclasses import dataclass
+from dataclasses import dataclass, asdict
 
-with open("web_scraping/cocktails_all.html") as fp:
-    soup = BeautifulSoup(fp, 'html.parser')
 
 @dataclass
 class Ingredient:
     amount: str
     unit: str
     liquor: str
+
+    def to_dict(self):
+        return asdict(self)
 
 @dataclass
 class Cocktail:
@@ -20,7 +21,21 @@ class Cocktail:
     method: str
     garnish: str
 
-def get_data(soup) -> list[tuple]:
+    def to_dict(self):
+        ingredients_to_dict = [ingredient.to_dict() for ingredient in self.ingredients]
+        return {"name":self.name, "ingredients": ingredients_to_dict, "method": self.method, "garnish": self.garnish}
+
+def main():
+    with open("web_scraping/cocktails_all.html") as fp:
+        soup = BeautifulSoup(fp, 'html.parser')
+
+    with open("web_scraping/cocktails.json","w") as fp:
+        cocktail_text = read_cocktail_recipe_raw_texts(soup)
+        cocktails = parse_cocktails(cocktail_text)
+        cocktails_to_dict = [cocktail.to_dict() for cocktail in cocktails]
+        json.dump(cocktails_to_dict,fp)
+
+def read_cocktail_recipe_raw_texts(soup) -> list[tuple[str,str]]:
     cocktail_data = []
     for data in soup.find_all('article',class_=re.compile("post-")):
         name = data.h3.a.text
@@ -28,17 +43,17 @@ def get_data(soup) -> list[tuple]:
         cocktail_data.append((name, cocktail_recipe))
     return cocktail_data
 
-def get_cocktails(cocktail_data: list[tuple]) -> list[Cocktail]:
+def parse_cocktails(cocktail_data: list[tuple[str,str]]) -> list[Cocktail]:
     cocktails = []
     for name, cocktail_recipe in cocktail_data:
         name = " ".join(name.split())
-        ingredients = get_ingredients(cocktail_recipe)
-        method, garnish = get_method_garnish(cocktail_recipe)
+        ingredients = parse_ingredients(cocktail_recipe)
+        method, garnish = parse_method_garnish(cocktail_recipe)
         cocktail = Cocktail(name, ingredients, method, garnish)
         cocktails.append(cocktail)
     return cocktails
 
-def get_ingredients(cocktail_recipe: str) -> list[Ingredient]:
+def parse_ingredients(cocktail_recipe: str) -> list[Ingredient]:
     ingredients = []
     ingredients_i = re.search("INGREDIENTS", cocktail_recipe).span()
     method_i = re.search("METHOD", cocktail_recipe).span()
@@ -50,9 +65,7 @@ def get_ingredients(cocktail_recipe: str) -> list[Ingredient]:
         ingredients.append(ingredient)
     return ingredients
 
-def get_method_garnish(cocktail_recipe: str) -> tuple[str]:
-    method = ""
-    garnish = ""
+def parse_method_garnish(cocktail_recipe: str) -> tuple[str]:
     method_i = re.search("METHOD", cocktail_recipe).span()
     garnish_m = re.search("GARNISH", cocktail_recipe)
     history_m = re.search("HISTORY", cocktail_recipe)
@@ -67,8 +80,5 @@ def get_method_garnish(cocktail_recipe: str) -> tuple[str]:
         garnish = "N/A"
     return (method, garnish)
 
-cocktails = get_cocktails(get_data(soup))
-print(len(cocktails))
-
-#with open("web_scraping/cocktails.json","w") as fp:
-#    json.dump(get_cocktails(get_data(soup)),fp, default=lambda o: o.__dict__)
+if __name__ == "__main__":
+    main()
