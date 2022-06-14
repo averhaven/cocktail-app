@@ -28,7 +28,7 @@ class Cocktail:
 def main():
     with open("web_scraping/cocktails_all.html") as fp:
         soup = BeautifulSoup(fp, 'html.parser')
-
+    
     with open("web_scraping/cocktails.json","w") as fp:
         cocktail_text = read_cocktail_recipe_raw_texts(soup)
         cocktails = parse_cocktails(cocktail_text)
@@ -37,7 +37,7 @@ def main():
 
 def read_cocktail_recipe_raw_texts(soup) -> list[tuple[str,str]]:
     cocktail_data = []
-    for data in soup.find_all('article',class_=re.compile("post-")):
+    for data in soup.find_all('article',id=re.compile("post-")):
         name = data.h3.a.text
         cocktail_recipe = data.p.text
         cocktail_data.append((name, cocktail_recipe))
