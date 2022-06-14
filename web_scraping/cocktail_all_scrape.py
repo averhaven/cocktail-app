@@ -29,11 +29,11 @@ def main():
     with open("web_scraping/cocktails_all.html") as fp:
         soup = BeautifulSoup(fp, 'html.parser')
     
-    with open("web_scraping/cocktails.json","w") as fp:
+    with open("web_scraping/cocktails.json","w", encoding='utf8') as fp:
         cocktail_text = read_cocktail_recipe_raw_texts(soup)
         cocktails = parse_cocktails(cocktail_text)
         cocktails_to_dict = [cocktail.to_dict() for cocktail in cocktails]
-        json.dump(cocktails_to_dict,fp)
+        json.dump(cocktails_to_dict,fp , ensure_ascii=False)
 
 def read_cocktail_recipe_raw_texts(soup) -> list[tuple[str,str]]:
     cocktail_data = []
