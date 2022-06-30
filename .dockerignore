@@ -1,0 +1,13 @@
+__pycache__/
+
+venv
+
+Makefile
+
+.gitignore
+
+LICENSE
+
+README.md
+
+scripts
