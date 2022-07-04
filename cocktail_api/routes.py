@@ -1,3 +1,6 @@
+#TODO better documentation add docstrings
+
+from typing import Union
 from mongoengine import DoesNotExist, connect
 from fastapi import HTTPException, APIRouter
 import json
@@ -5,20 +8,25 @@ from cocktail_api import db_models, schema
 
 router = APIRouter()
 
+#TODO:move it to main
 connect("cocktail_db", host="mongodb", port=27017)
 
-@router.get("/")
-def index():
-    return {"message":"welcome to the cocktail-api!"}
-
 @router.get("/cocktails/", response_model=list[schema.Cocktail])
-def read_cocktails(liquor: str = None):
+def read_cocktails(liquor: Union[str, None] = None):
+    """Retrieve list of cocktails
+
+    Parameters:
+
+    liquor:
+        filter cocktails containing only this particular liquor. Supported values:
+        gin, whiskey, etc...
+    """
     if liquor:
         cocktails = get_cocktails_by_liquor(liquor=liquor)
     else:
         cocktails = get_cocktails()
     return cocktails
-
+#TODO: type hints
 def get_cocktails():
     result = db_models.Cocktail.objects.to_json()
     cocktails = [schema.CocktailInDB(**cocktail) for cocktail in json.loads(result)]
@@ -28,12 +36,13 @@ def get_cocktails_by_liquor(liquor: str):
     result = db_models.Cocktail.objects(ingredients__liquor=liquor).to_json()
     cocktails = [schema.CocktailInDB(**cocktail) for cocktail in json.loads(result)]
     return cocktails
-
+#TODO: id instead of name
 @router.get("/cocktails/{name}", response_model=schema.Cocktail)
 def read_cocktail(name: str):
     cocktail = get_cocktail(name=name)
     return cocktail
 
+#TODO raise 404 exception
 def get_cocktail(name: str):
     try:
         result = db_models.Cocktail.objects.get(name=name).to_json()
