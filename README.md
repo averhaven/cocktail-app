@@ -1,5 +1,8 @@
 # cocktail-app
 
+## setup
+TODO: add setup instructions
+
 ## cocktail_api
 
 Api for cocktail recipes. The app uses FastAPI, MongoDB and mongoengine.
